@@ -1,0 +1,8 @@
+feature,gain_importance,split_importance
+dist_diff,7732.274094104767,183
+pen_diff,5782.763697147369,134
+ppr_diff,4573.235045909882,228
+pos_in_bucket_pen,2890.2866036891937,133
+bucket_dist,1942.7669677734375,3
+bucket_pen,4.034389972686768,1
+bucket_ppr,0.0,0
