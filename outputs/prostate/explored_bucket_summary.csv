@@ -1,0 +1,5 @@
+bucket,n_candidates,n_known,best_model,best_recall@10,best_ndcg@10
+0,2,2,LightGBM-LambdaMART,1.0,1.0
+1,67,67,LightGBM-LambdaMART,0.1493,1.0
+2,14,14,LightGBM-LambdaMART,0.7143,1.0
+3,1,1,LightGBM-LambdaMART,1.0,0.0
