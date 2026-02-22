@@ -1,14 +1,69 @@
-data_raw/breast/ranked_pen.tsv
-data_raw/breast/ranked_ppr.tsv
-data_raw/breast/ranked_dist.tsv
-data_raw/prostate/ranked_pen.tsv
-data_raw/prostate/ranked_ppr.tsv
-data_raw/prostate/ranked_dist.tsv
-outputs/breast/pairs_k2_standardized.csv
-outputs/prostate/pairs_k2_standardized.csv
-.venv/
+# Network Embedding for Drug Target Discovery
+# Git Ignore File
+
+# Large compressed archives
+*.zip
+*.tar.gz
+*.7z
+
+# Python
 __pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
 *.pyc
+*.pyo
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# System files
 .DS_Store
-*.ipynb_checkpoints
+._.DS_Store
+Thumbs.db
+
+# Large model files (too big for GitHub)
+models/**/*.joblib
+models/**/*.cbm
+models/**/*.ubj
+models/**/*.pkl
+models/**/*.h5
+
+# Large data files
 data_raw/
+*.tsv
+outputs/*/pairs_k2_standardized.csv
+outputs/*/Archive.zip
+
+# Keep these small CSVs
+!outputs/*/unexplored_ranked_all.csv
+!outputs/*/unexplored_top_candidates.csv
+!outputs/*/explored_model_comparison.csv
+!outputs/*/explored_bucket_summary.csv
+!models/*/model_comparison.csv
+!models/*/feature_importance.csv
+!models/*/*.txt
+
+# Temporary files
+*.tmp
+*.log
+*.cache
