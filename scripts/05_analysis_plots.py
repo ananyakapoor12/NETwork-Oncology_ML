@@ -1,8 +1,4 @@
-#!/usr/bin/env python3
 """
-scripts/05_analysis_plots.py
-
-Works with your FYP_PANACEA outputs schema:
 Columns typically include:
 ['group_id','label','pen_diff','dist_diff','ppr_diff',
  'bucket_pen','bucket_dist','bucket_ppr','pos_in_bucket_pen']
@@ -11,9 +7,6 @@ Generates:
 1) Bucket distribution plots (combined + split train/test if possible)
 2) Rank position histogram (pos_in_bucket_pen)
 3) Cross-cancer Recall@K using pos_in_bucket_pen (lower is better)
-
-Run:
-  python scripts/05_analysis_plots.py
 """
 
 from __future__ import annotations

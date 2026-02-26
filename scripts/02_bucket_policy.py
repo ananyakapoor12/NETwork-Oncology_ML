@@ -11,7 +11,7 @@ CANCERS = ["breast", "prostate"]
 BUCKETS = 5
 TOP_FRACS = [0.01, 0.10, 0.20, 0.50]
 
-# weights for combining histogram signals (tune later)
+# weights for combining histogram signals -- tuning to be done 
 ALPHA_PEN = 0.5
 BETA_DIST = 0.3
 GAMMA_PPR = 0.2
@@ -31,7 +31,7 @@ def delta_histogram_like_panacea(df: pd.DataFrame, score_col: str, n_bins: int):
     - compute coverage of known targets within top 1/10/20/50% of bucket
     """
     edges = make_equal_width_bins(df[score_col], n_bins)
-    bucket_id = pd.cut(df[score_col], bins=edges, labels=False, include_lowest=True)
+    bucket_id = pd.cut(df[score_col], bins=edges, labels=False, include_lowest=True) # type: ignore
 
     df2 = df.copy()
     df2["bucket"] = bucket_id
@@ -129,3 +129,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

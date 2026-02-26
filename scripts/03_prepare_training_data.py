@@ -21,7 +21,7 @@ def assign_bucket(values: pd.Series, edges: list[float]) -> pd.Series:
     # include_lowest=True and right=False to mimic typical binning (consistent once fixed)
     bins = np.array(edges, dtype=float)
     # pandas cut returns NaN if outside; edges from meta should cover min/max
-    return pd.cut(values, bins=bins, labels=False, include_lowest=True)
+    return pd.cut(values, bins=bins, labels=False, include_lowest=True) # type: ignore
 
 def main():
     import argparse

@@ -1,5 +1,4 @@
 """
-07_compare_models.py
 Compare all trained ranking models on the test set for a given cancer type.
 
 Evaluates: LightGBM LambdaRank, XGBoost LambdaRank, CatBoost YetiRank.
@@ -10,11 +9,6 @@ Also plots:
   • Bar chart of Recall@K and NDCG@K across models (per cancer type)
   • Per-bucket Recall@10 comparison (shows intra-bucket ranking quality)
   • Explored vs unexplored bucket summary with top-ranked novel candidates
-
-Usage:
-    python scripts/07_compare_models.py --cancer breast
-    python scripts/07_compare_models.py --cancer prostate
-    python scripts/07_compare_models.py --cancer both
 """
 
 from pathlib import Path

@@ -33,7 +33,7 @@ def assign_buckets(df: pd.DataFrame, meta: Dict) -> pd.DataFrame:
     """Assign bucket indices and pos_in_bucket_pen using meta edges."""
     df = df.copy()
     
-    # Assign buckets - fixed to avoid type warnings
+    # Assign buckets
     for score, key in [("pen_diff", "pen"), ("dist_diff", "dist"), ("ppr_diff", "ppr")]:
         edges = np.array(meta["edges"][key], dtype=float)
         # Use pd.cut with explicit typing to avoid Pylance warnings
@@ -113,9 +113,6 @@ def assign_confidence_tier(composite_score: float, q33: float, q67: float,
         return "Low"
 
 
-# ─────────────────────────────────────────────
-# Main
-# ─────────────────────────────────────────────
 
 def main():
     ap = argparse.ArgumentParser()
@@ -160,7 +157,7 @@ def main():
     print(f"  Unexplored buckets    : {sorted(unexplored_ids)}  ({len(unexplored_ids)} buckets)")
     
     if len(unexplored_ids) == 0:
-        print("\n  ⚠️  All buckets are explored. No novel candidates to rank.")
+        print("\nAll buckets are explored. No novel candidates to rank.")
         print("      (This is unusual — double-check bucket_policy.csv)\n")
         return
     
@@ -168,7 +165,7 @@ def main():
     print(f"  Candidates in unexplored regions: {len(df_unexplored):,}\n")
     
     if len(df_unexplored) == 0:
-        print("  ⚠️  No candidates found in unexplored buckets.\n")
+        print("No candidates found in unexplored buckets.\n")
         return
     
     # ── Load model ────────────────────────────────────────────
@@ -293,7 +290,7 @@ def main():
                     if c in df_unexplored.columns]
     print(df_unexplored[display_cols].head(10).to_string(index=False))
     
-    print(f"\n  ✅ Saved outputs:")
+    print(f"\n Saved outputs:")
     print(f"     • unexplored_ranked_all.csv       ({len(df_unexplored):,} candidates)")
     print(f"     • unexplored_top_candidates.csv   (top {len(top_n)} high-confidence)")
     print(f"     • unexplored_by_bucket.csv        ({len(bucket_summary)} buckets)")

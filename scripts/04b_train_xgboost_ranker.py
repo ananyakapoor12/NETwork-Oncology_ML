@@ -1,11 +1,6 @@
 """
-04b_train_xgboost_ranker.py
 Train an XGBoost learning-to-rank model (rank:ndcg objective) on the same
 bucket-guided training data used for the LightGBM ranker.
-
-Usage:
-    python scripts/04b_train_xgboost_ranker.py --cancer breast
-    python scripts/04b_train_xgboost_ranker.py --cancer prostate
 """
 
 from pathlib import Path

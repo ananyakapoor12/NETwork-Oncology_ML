@@ -37,9 +37,9 @@ def main():
     edges_dist = np.array(meta["edges"]["dist"])
     edges_ppr  = np.array(meta["edges"]["ppr"])
 
-    df["bucket_pen"]  = pd.cut(df["pen_diff"],  bins=edges_pen,  labels=False, include_lowest=True)
-    df["bucket_dist"] = pd.cut(df["dist_diff"], bins=edges_dist, labels=False, include_lowest=True)
-    df["bucket_ppr"]  = pd.cut(df["ppr_diff"],  bins=edges_ppr,  labels=False, include_lowest=True)
+    df["bucket_pen"]  = pd.cut(df["pen_diff"],  bins=edges_pen,  labels=False, include_lowest=True) # type: ignore
+    df["bucket_dist"] = pd.cut(df["dist_diff"], bins=edges_dist, labels=False, include_lowest=True) # type: ignore
+    df["bucket_ppr"]  = pd.cut(df["ppr_diff"],  bins=edges_ppr,  labels=False, include_lowest=True) # type: ignore
 
     # position inside PEN bucket (same as Phase 3)
     grp = df.groupby("bucket_pen")["pen_diff"]

@@ -1,14 +1,9 @@
 """
-04c_train_catboost_ranker.py
 Train a CatBoost learning-to-rank model (YetiRank objective) on the same
 bucket-guided training data used for the LightGBM and XGBoost rankers.
 
 YetiRank directly optimises NDCG, making it well aligned with the therapeutic
 prioritisation objective.
-
-Usage:
-    python scripts/04c_train_catboost_ranker.py --cancer breast
-    python scripts/04c_train_catboost_ranker.py --cancer prostate
 """
 
 from pathlib import Path
@@ -144,7 +139,7 @@ def main():
     # Feature importance
     imp_df = pd.DataFrame({
         "feature": FEATURES,
-        "gain_importance": model.get_feature_importance(train_pool, type="PredictionValuesChange"),
+        "gain_importance": model.get_feature_importance(train_pool, type="PredictionValuesChange"), # type: ignore
     }).sort_values("gain_importance", ascending=False)
     imp_df.to_csv(out_dir / "catboost_feature_importance.csv", index=False)
 
