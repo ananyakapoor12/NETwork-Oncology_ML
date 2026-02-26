@@ -3,8 +3,6 @@
 ## A Machine Learning Based Approach
 
 **Final Year Project**  
-**Author:** Ananya Kapoor  
-**GitHub:** https://github.com/ananyakapoor12/NETwork-Oncology_ML
 
 ---
 
