@@ -31,3 +31,13 @@ build/
 # Large output files
 *.zip
 *.tar.gz
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Model files
+*.cbm
+*.ubj
+models/
