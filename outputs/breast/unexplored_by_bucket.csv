@@ -1,2 +1,0 @@
-bucket,pen_diff_range,n_candidates,novelty_weight,mean_pen_diff,mean_composite_score,top_composite_score,high_confidence_count,medium_confidence_count,low_confidence_count
-0,"[-0.0045, 0.4301]",59,-0.0001,-0.0001,0.6762,0.7,0,57,2
