@@ -1,10 +1,8 @@
-# Network Embedding for Drug Target Discovery
-# Git Ignore File
-
-# Large compressed archives
-*.zip
-*.tar.gz
-*.7z
+# Large data files
+data_raw/
+*.csv
+*.xlsx
+*.xls
 
 # Python
 __pycache__/
@@ -12,58 +10,24 @@ __pycache__/
 *$py.class
 *.so
 .Python
-*.egg
+env/
+venv/
 *.egg-info/
 dist/
 build/
-*.pyc
-*.pyo
-
-# Virtual environments
-.venv/
-venv/
-env/
-ENV/
 
 # Jupyter Notebook
 .ipynb_checkpoints
-*.ipynb
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# System files
+# macOS
 .DS_Store
-._.DS_Store
-Thumbs.db
 
-# Large model files (too big for GitHub)
-models/**/*.joblib
-models/**/*.cbm
-models/**/*.ubj
-models/**/*.pkl
-models/**/*.h5
+# Models (if you have any)
+*.h5
+*.pkl
+*.joblib
+*.pth
 
-# Large data files
-data_raw/
-*.tsv
-outputs/*/pairs_k2_standardized.csv
-outputs/*/Archive.zip
-
-# Keep these small CSVs
-!outputs/*/unexplored_ranked_all.csv
-!outputs/*/unexplored_top_candidates.csv
-!outputs/*/explored_model_comparison.csv
-!outputs/*/explored_bucket_summary.csv
-!models/*/model_comparison.csv
-!models/*/feature_importance.csv
-!models/*/*.txt
-
-# Temporary files
-*.tmp
-*.log
-*.cache
+# Large output files
+*.zip
+*.tar.gz
