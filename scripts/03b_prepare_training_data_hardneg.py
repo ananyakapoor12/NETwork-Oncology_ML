@@ -1,8 +1,8 @@
 import json
 from pathlib import Path
-import numpy as np
-import pandas as pd
-import joblib
+import numpy as np # type: ignore
+import pandas as pd # type: ignore
+import joblib # type: ignore
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 OUTPUTS = PROJECT_ROOT / "outputs"
@@ -66,7 +66,7 @@ def main():
     negatives = df[df.is_known == 0]
 
     neg_by_bucket = {
-        b: g.sort_values("pred", ascending=False)
+        b: g.sort_values("pred", ascending=False) # type: ignore
         for b,g in negatives.groupby("bucket_pen")
     }
 

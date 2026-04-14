@@ -70,7 +70,7 @@ def main():
     df["pos_in_bucket_pen"] = (df["pen_diff"] - bmin) / (bmax - bmin + 1e-12)
 
     # Split positives into train/test sets
-    pos_idx = df.index[df["is_known"] == 1].to_numpy()
+    pos_idx = df.index[df["is_known"] == 1].to_numpy().copy()
     if len(pos_idx) == 0:
         raise ValueError("No positives found (is_known==1). Check Phase 1 output.")
 
@@ -80,11 +80,11 @@ def main():
     train_pos_idx = pos_idx[n_test:]
 
     # Pre-index negatives per bucket for fast sampling
-    neg_idx = df.index[df["is_known"] == 0].to_numpy()
+    neg_idx = df.index[df["is_known"] == 0].to_numpy().copy()
     # bucket -> list of indices
     neg_by_bucket = {}
     for b in range(int(df["bucket_pen"].max()) + 1):
-        bucket_neg = df.index[(df["is_known"] == 0) & (df["bucket_pen"] == b)].to_numpy()
+        bucket_neg = df.index[(df["is_known"] == 0) & (df["bucket_pen"] == b)].to_numpy().copy()
         neg_by_bucket[b] = bucket_neg
 
     def build_groups(pos_indices: np.ndarray, out_path: Path):
@@ -92,7 +92,7 @@ def main():
         group_id = 0
 
         for pi in pos_indices:
-            b = int(df.at[pi, "bucket_pen"])
+            b = int(df.at[pi, "bucket_pen"]) # type: ignore
             neg_pool = neg_by_bucket.get(b, np.array([], dtype=int))
             if len(neg_pool) == 0:
                 # If no negatives in that bucket, skip (rare)
@@ -109,8 +109,8 @@ def main():
                 r = df.loc[idx, FEATURE_COLS + ["is_known"]]
                 rows.append({
                     "group_id": group_id,
-                    "label": int(r["is_known"]),
-                    **{c: float(r[c]) for c in FEATURE_COLS}
+                    "label": int(r["is_known"]), # type: ignore
+                    **{c: float(r[c]) for c in FEATURE_COLS} # type: ignore
                 })
             group_id += 1
 

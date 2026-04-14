@@ -3,9 +3,9 @@ import warnings
 
 import numpy as np
 import pandas as pd
-import matplotlib
+import matplotlib     
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt     
 
 warnings.filterwarnings("ignore")
 
@@ -118,7 +118,7 @@ def fig5_feature_importance():
             xlabel = "Gain Importance"
         elif df.shape[1] > 1:
             numeric_col = df.select_dtypes(include=[np.number]).columns[0]
-            df = df.sort_values(numeric_col, ascending=True)
+            df = df.sort_values(numeric_col, ascending=True) # type: ignore
             vals = df[numeric_col]
             xlabel = numeric_col
         else:
@@ -141,7 +141,7 @@ def fig5_feature_importance():
         ax.spines["right"].set_visible(False)
         
         # Add legend for bucket features
-        from matplotlib.patches import Patch
+        from matplotlib.patches import Patch # type: ignore
         legend_elements = [
             Patch(facecolor=PALETTE[cancer], label="Core features"),
             Patch(facecolor="#FF6B6B", label="Bucket features (prof wanted!)")

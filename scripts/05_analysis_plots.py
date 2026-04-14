@@ -14,9 +14,9 @@ import os
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
+import numpy as np 
+import pandas as pd 
+import matplotlib.pyplot as plt 
 
 
 OUTPUTS_DIR = Path("outputs")
@@ -173,7 +173,7 @@ def plot_bucket_distribution_combined(by_cancer, outpath: Path) -> None:
     width = 0.8 / max(1, len(cancers))
 
     for i, cancer in enumerate(cancers):
-        plt.bar(x + i * width, plot_df[cancer].values, width=width, label=cancer)
+        plt.bar(x + i * width, plot_df[cancer].values, width=width, label=cancer) # type: ignore
 
     plt.xlabel("Bucket (bucket_pen)")
     plt.ylabel("Count")
@@ -219,7 +219,7 @@ def plot_bucket_distribution_by_split(by_cancer, split_name: str, outpath: Path)
     width = 0.8 / max(1, len(cancers))
 
     for i, cancer in enumerate(cancers):
-        plt.bar(x + i * width, plot_df[cancer].values, width=width, label=cancer)
+        plt.bar(x + i * width, plot_df[cancer].values, width=width, label=cancer) # type: ignore
 
     plt.xlabel("Bucket (bucket_pen)")
     plt.ylabel("Count")

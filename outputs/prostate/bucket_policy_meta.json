@@ -1,0 +1,88 @@
+{
+  "source": "PANACEA published histogram output",
+  "method": "Exact boundaries from PANACEA (NOT computed from data)",
+  "histogram_files": {
+    "pen": "Prostate_Cancer_oncogenes_PEN-diff_percentage_plot_des.png",
+    "dist": "Prostate_Cancer_oncogenes_Distance-diff_percentage_plot_des.png",
+    "ppr": "Prostate_Cancer_oncogenes_ppr-diff_percentage_plot_des.png"
+  },
+  "n_buckets": 5,
+  "edges": {
+    "pen": [
+      -0.5126,
+      -0.1847,
+      0.1432,
+      0.4712,
+      0.7991,
+      1.1271
+    ],
+    "dist": [
+      -2.7135,
+      -1.5697,
+      -0.4259,
+      0.7179,
+      1.8617,
+      3.0055
+    ],
+    "ppr": [
+      -0.0233,
+      -0.0183,
+      -0.0137,
+      -0.0044,
+      -0.0009,
+      0.0003
+    ]
+  },
+  "explored_buckets": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "unexplored_buckets": [
+    4
+  ],
+  "bucket_summary": [
+    {
+      "bucket": 0,
+      "pen_range": "[-0.5126, -0.1847]",
+      "n_pairs": 24578,
+      "n_known": 10,
+      "percentage_known": "0.0%",
+      "status": "EXPLORED"
+    },
+    {
+      "bucket": 1,
+      "pen_range": "[-0.1847, 0.1432]",
+      "n_pairs": 1645296,
+      "n_known": 337,
+      "percentage_known": "0.0%",
+      "status": "EXPLORED"
+    },
+    {
+      "bucket": 2,
+      "pen_range": "[0.1432, 0.4712]",
+      "n_pairs": 741907,
+      "n_known": 71,
+      "percentage_known": "0.0%",
+      "status": "EXPLORED"
+    },
+    {
+      "bucket": 3,
+      "pen_range": "[0.4712, 0.7991]",
+      "n_pairs": 37175,
+      "n_known": 2,
+      "percentage_known": "0.0%",
+      "status": "EXPLORED"
+    },
+    {
+      "bucket": 4,
+      "pen_range": "[0.7991, 1.1271]",
+      "n_pairs": 602,
+      "n_known": 0,
+      "percentage_known": "0.0%",
+      "status": "UNEXPLORED"
+    }
+  ],
+  "note": "ALL bucket boundaries (PEN, Distance, PPR) come from PANACEA's analysis, not computed by us"
+}

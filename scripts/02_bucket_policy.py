@@ -1,132 +1,285 @@
+"""
+Script 02: PANACEA Bucket Policy (COMPLETE EXACT ALIGNMENT)
+
+CRITICAL: Uses EXACT bucket boundaries from ALL PANACEA histogram outputs.
+These edges are extracted from the published PANACEA histogram images.
+We do NOT compute our own buckets - we use PANACEA's exact boundaries.
+
+Source: PANACEA histogram output files:
+  Breast Cancer:
+    - Breast_Cancer_oncogenes_PEN-diff_percentage_plot_des.png
+    - Breast_Cancer_oncogenes_Distance-diff_percentage_plot_des.png
+    - Breast_Cancer_oncogenes_ppr-diff_percentage_plot_des.png
+  
+  Prostate Cancer:
+    - Prostate_Cancer_oncogenes_PEN-diff_percentage_plot_des.png
+    - Prostate_Cancer_oncogenes_Distance-diff_percentage_plot_des.png
+    - Prostate_Cancer_oncogenes_ppr-diff_percentage_plot_des.png
+"""
 from pathlib import Path
 import json
-import numpy as np
-import pandas as pd
-from math import floor
+import numpy as np # type: ignore
+import pandas as pd # type: ignore
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 OUTPUTS = PROJECT_ROOT / "outputs"
 
 CANCERS = ["breast", "prostate"]
-BUCKETS = 5
-TOP_FRACS = [0.01, 0.10, 0.20, 0.50]
 
-# weights for combining histogram signals -- tuning to be done 
-ALPHA_PEN = 0.5
-BETA_DIST = 0.3
-GAMMA_PPR = 0.2
+# ═══════════════════════════════════════════════════════════════════════════
+# PANACEA'S PUBLISHED BUCKET BOUNDARIES (ALL THREE SCORES)
+# Extracted directly from PANACEA histogram output images
+# ═══════════════════════════════════════════════════════════════════════════
 
-def make_equal_width_bins(x: pd.Series, n_bins: int):
-    xmin, xmax = float(x.min()), float(x.max())
-    edges = np.linspace(xmin, xmax, n_bins + 1)
-    # ensure last edge includes max
-    edges[-1] = np.nextafter(edges[-1], edges[-1] + 1)
-    return edges
+PANACEA_BUCKET_EDGES = {
+    "breast": {
+        # From Breast_Cancer_oncogenes_PEN-diff_percentage_plot_des.png
+        "pen": [-0.0045, 0.4301, 0.8647, 1.2993, 1.7338, 2.1684],
+        
+        # From Breast_Cancer_oncogenes_Distance-diff_percentage_plot_des.png
+        "dist": [-2.9549, -1.5958, -0.2368, 1.1222, 2.4812, 3.8403],
+        
+        # From Breast_Cancer_oncogenes_ppr-diff_percentage_plot_des.png
+        "ppr": [-0.0137, -0.0109, -0.0081, -0.0053, -0.0024, 0.0004],
+    },
+    "prostate": {
+        # From Prostate_Cancer_oncogenes_PEN-diff_percentage_plot_des.png
+        "pen": [-0.5126, -0.1847, 0.1432, 0.4712, 0.7991, 1.1271],
+        
+        # From Prostate_Cancer_oncogenes_Distance-diff_percentage_plot_des.png
+        "dist": [-2.7135, -1.5697, -0.4259, 0.7179, 1.8617, 3.0055],
+        
+        # From Prostate_Cancer_oncogenes_ppr-diff_percentage_plot_des.png
+        "ppr": [-0.0233, -0.0183, -0.0137, -0.0044, -0.0009, 0.0003]
+    }
+}
 
-def delta_histogram_like_panacea(df: pd.DataFrame, score_col: str, n_bins: int):
+N_BUCKETS = 5
+
+
+def compute_bucket_statistics(df: pd.DataFrame, score_col: str, bucket_col: str, 
+                               edges: list, n_buckets: int = 5):
     """
-    PANACEA-style coverage:
-    - equal-width buckets
-    - within each bucket, sort candidates by score desc
-    - compute coverage of known targets within top 1/10/20/50% of bucket
+    Compute PANACEA-style statistics for each bucket.
+    
+    Args:
+        df: DataFrame with gene pairs
+        score_col: Name of score column (e.g., 'pen_diff')
+        bucket_col: Name of bucket column (e.g., 'bucket_pen')
+        edges: Bucket edges from PANACEA
+        n_buckets: Number of buckets (always 5 for PANACEA)
+    
+    Returns:
+        DataFrame with bucket statistics
     """
-    edges = make_equal_width_bins(df[score_col], n_bins)
-    bucket_id = pd.cut(df[score_col], bins=edges, labels=False, include_lowest=True) # type: ignore
-
-    df2 = df.copy()
-    df2["bucket"] = bucket_id
-
     bucket_rows = []
-    total_known = int(df2["is_known"].sum())
-
-    for b in range(n_bins):
-        bucket_df = df2[df2["bucket"] == b]
-        candidates = bucket_df[score_col].sort_values(ascending=False).reset_index(drop=True)
-        known_scores = bucket_df[bucket_df["is_known"] == 1][score_col].sort_values(ascending=False).reset_index(drop=True)
-
-        cand_n = len(candidates)
-        known_n = len(known_scores)
-
-        row = {
-            "bucket": b,
-            "range": f"{edges[b]:.6g} - {edges[b+1]:.6g}",
-            "candidate_count": cand_n,
-            "known_count": known_n,
-            "percentage_of_all_known_in_bucket": (known_n / total_known) if total_known > 0 else 0.0,
-        }
-
-        for m in TOP_FRACS:
-            if cand_n == 0 or known_n == 0:
-                cov = 0.0
+    total_known = int(df["is_known"].sum())
+    
+    for b in range(n_buckets):
+        bucket_df = df[df[bucket_col] == b]
+        
+        n_pairs = len(bucket_df)
+        n_known = int(bucket_df["is_known"].sum())
+        
+        edge_min = edges[b]
+        edge_max = edges[b + 1]
+        
+        # Compute coverage at different thresholds (PANACEA style)
+        candidates = bucket_df[score_col].sort_values(ascending=False)
+        known_scores = bucket_df[bucket_df["is_known"] == 1][score_col].sort_values(ascending=False)
+        
+        coverages = {}
+        for pct in [1, 10, 20, 50]:
+            if len(candidates) == 0 or len(known_scores) == 0:
+                coverages[f"coverage_{pct}"] = 0.0
             else:
-                idx = floor(cand_n * m)
-                idx = min(idx, cand_n - 1)
-                thr = candidates.iloc[idx]
-                cov = float((known_scores >= thr).sum() / known_n)
-            row[f"coverage_{int(m*100)}"] = cov
+                idx = max(0, int(len(candidates) * pct / 100) - 1)
+                threshold = candidates.iloc[idx]
+                coverage = float((known_scores >= threshold).sum() / len(known_scores))
+                coverages[f"coverage_{pct}"] = coverage
+        
+        bucket_rows.append({
+            "bucket": b,
+            "range": f"[{edge_min:.4f}, {edge_max:.4f}]",
+            "candidate_count": n_pairs,
+            "known_count": n_known,
+            "percentage_of_all_known": f"{100 * n_known / total_known:.1f}%" if total_known > 0 else "0%",
+            **coverages
+        })
+    
+    return pd.DataFrame(bucket_rows)
 
-        bucket_rows.append(row)
-
-    return pd.DataFrame(bucket_rows), edges
-
-def build_bucket_policy(bkt_pen: pd.DataFrame, bkt_dist: pd.DataFrame, bkt_ppr: pd.DataFrame, lam: float):
-    """
-    W(b) = lam*novelty + (1-lam)*exploitation
-    novelty = 1 if known_count==0 else 0
-    exploitation = weighted sum of coverage_50 across 3 histograms
-    """
-    merged = bkt_pen[["bucket","range","candidate_count","known_count","coverage_50"]].merge(
-        bkt_dist[["bucket","coverage_50"]], on="bucket", suffixes=("_pen","_dist")
-    ).merge(
-        bkt_ppr[["bucket","coverage_50"]], on="bucket"
-    )
-    merged = merged.rename(columns={"coverage_50": "coverage_50_ppr"})
-
-    merged["novelty"] = (merged["known_count"] == 0).astype(int)
-    merged["exploitation"] = (
-        ALPHA_PEN * merged["coverage_50_pen"] +
-        BETA_DIST * merged["coverage_50_dist"] +
-        GAMMA_PPR * merged["coverage_50_ppr"]
-    )
-    merged["W"] = lam * merged["novelty"] + (1 - lam) * merged["exploitation"]
-
-    s = merged["W"].sum()
-    merged["W_norm"] = merged["W"] / s if s > 0 else 0.0
-    return merged
 
 def main():
+    """
+    Create bucket policy using PANACEA's exact histogram boundaries.
+    """
+    
     for cancer in CANCERS:
-        in_path = OUTPUTS / cancer / "pairs_k2_standardized.csv"
-        df = pd.read_csv(in_path)
-
-        # Compute PANACEA-style bucket stats for each score
-        bkt_pen, pen_edges = delta_histogram_like_panacea(df, "pen_diff", BUCKETS)
-        bkt_dist, dist_edges = delta_histogram_like_panacea(df, "dist_diff", BUCKETS)
-        bkt_ppr, ppr_edges = delta_histogram_like_panacea(df, "ppr_diff", BUCKETS)
-
-        out_dir = OUTPUTS / cancer
-        bkt_pen.to_csv(out_dir / "bucket_table_pen.csv", index=False)
-        bkt_dist.to_csv(out_dir / "bucket_table_dist.csv", index=False)
-        bkt_ppr.to_csv(out_dir / "bucket_table_ppr.csv", index=False)
-
-        # Novelty emphasis: prostate typically has more "empty-bar" buckets; breast tends to be low-evidence rather than empty
-        lam = 0.7 if cancer == "prostate" else 0.6
-
-        policy = build_bucket_policy(bkt_pen, bkt_dist, bkt_ppr, lam=lam)
-        policy.to_csv(out_dir / "bucket_policy.csv", index=False)
-
+        print(f"\n{'='*70}")
+        print(f"  PANACEA BUCKET POLICY - {cancer.upper()}")
+        print(f"  Using PANACEA's Published Histogram Boundaries")
+        print(f"{'='*70}\n")
+        
+        cancer_dir = OUTPUTS / cancer
+        cancer_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Load standardized pairs
+        pairs_path = cancer_dir / "pairs_k2_standardized.csv"
+        if not pairs_path.exists():
+            raise FileNotFoundError(f"Run Script 01 first. Missing: {pairs_path}")
+        
+        df = pd.read_csv(pairs_path)
+        print(f"  Loaded {len(df):,} gene pairs")
+        
+        # Get PANACEA's edges for this cancer
+        edges = PANACEA_BUCKET_EDGES[cancer]
+        
+        print(f"\n  PANACEA Bucket Edges (from histogram output):")
+        print(f"    PEN-diff:      {edges['pen']}")
+        print(f"    Distance-diff: {edges['dist']}")
+        print(f"    PPR-diff:      {edges['ppr']}\n")
+        
+        # ══════════════════════════════════════════════════════════════
+        # Assign buckets using PANACEA's EXACT edges
+        # ══════════════════════════════════════════════════════════════
+        
+        for score_name, edge_key in [("pen_diff", "pen"), 
+                                       ("dist_diff", "dist"), 
+                                       ("ppr_diff", "ppr")]:
+            
+            bucket_edges = np.array(edges[edge_key], dtype=float)
+            
+            # Use pd.cut with PANACEA's exact boundaries
+            df[f"bucket_{edge_key}"] = pd.cut(
+                df[score_name],
+                bins=bucket_edges, # type: ignore
+                labels=False,
+                include_lowest=True,
+                duplicates='drop'  # Handle any duplicate edges
+            ) # type: ignore
+        
+        # ══════════════════════════════════════════════════════════════
+        # Drop NaN (values outside PANACEA's range)
+        # ══════════════════════════════════════════════════════════════
+        
+        n_before = len(df)
+        df = df.dropna(subset=["bucket_pen", "bucket_dist", "bucket_ppr"]).copy()
+        n_dropped = n_before - len(df)
+        
+        if n_dropped > 0:
+            pct = 100 * n_dropped / n_before
+            print(f" {n_dropped:,} pairs ({pct:.2f}%) fall outside PANACEA's bucket ranges")
+            print(f"      Keeping {len(df):,} pairs within PANACEA's defined ranges\n")
+        
+        # Convert to int
+        df["bucket_pen"] = df["bucket_pen"].astype(int)
+        df["bucket_dist"] = df["bucket_dist"].astype(int)
+        df["bucket_ppr"] = df["bucket_ppr"].astype(int)
+        
+        # ══════════════════════════════════════════════════════════════
+        # Compute position within PEN bucket
+        # ══════════════════════════════════════════════════════════════
+        
+        grp = df.groupby("bucket_pen")["pen_diff"]
+        df["pos_in_bucket_pen"] = (
+            (df["pen_diff"] - grp.transform("min"))
+            / (grp.transform("max") - grp.transform("min") + 1e-12)
+        )
+        
+        # Save pairs with bucket assignments
+        df.to_csv(cancer_dir / "pairs_with_buckets.csv", index=False)
+        
+        # ══════════════════════════════════════════════════════════════
+        # Analyze PEN-diff bucket statistics (primary focus)
+        # ══════════════════════════════════════════════════════════════
+        
+        print(f"  PEN-diff Bucket Statistics:")
+        print(f"  {'─'*70}")
+        
+        bucket_summary = []
+        
+        for bucket_id in range(N_BUCKETS):
+            bucket_df = df[df["bucket_pen"] == bucket_id]
+            n_pairs = len(bucket_df)
+            n_known = int(bucket_df["is_known"].sum())
+            
+            pen_min = edges["pen"][bucket_id]
+            pen_max = edges["pen"][bucket_id + 1]
+            
+            status = "EXPLORED" if n_known > 0 else "UNEXPLORED"
+            
+            bucket_summary.append({
+                "bucket": bucket_id,
+                "pen_range": f"[{pen_min:.4f}, {pen_max:.4f}]",
+                "n_pairs": n_pairs,
+                "n_known": n_known,
+                "percentage_known": f"{100 * n_known / n_pairs:.1f}%" if n_pairs > 0 else "0%",
+                "status": status,
+            })
+            
+            print(f"  Bucket {bucket_id}: {pen_min:8.4f} to {pen_max:8.4f}  "
+                  f"| {n_pairs:8,} pairs | {n_known:5} known | {status}")
+        
+        # Identify explored vs unexplored
+        explored = [b["bucket"] for b in bucket_summary if b["n_known"] > 0]
+        unexplored = [b["bucket"] for b in bucket_summary if b["n_known"] == 0]
+        
+        print(f"\n  Explored buckets   : {explored}")
+        print(f"  Unexplored buckets : {unexplored}")
+        
+        # ══════════════════════════════════════════════════════════════
+        # Compute detailed statistics for all three scores
+        # ══════════════════════════════════════════════════════════════
+        
+        bkt_pen_stats = compute_bucket_statistics(df, "pen_diff", "bucket_pen", edges["pen"])
+        bkt_dist_stats = compute_bucket_statistics(df, "dist_diff", "bucket_dist", edges["dist"])
+        bkt_ppr_stats = compute_bucket_statistics(df, "ppr_diff", "bucket_ppr", edges["ppr"])
+        
+        # Save detailed bucket tables
+        bkt_pen_stats.to_csv(cancer_dir / "bucket_table_pen.csv", index=False)
+        bkt_dist_stats.to_csv(cancer_dir / "bucket_table_dist.csv", index=False)
+        bkt_ppr_stats.to_csv(cancer_dir / "bucket_table_ppr.csv", index=False)
+        
+        # ══════════════════════════════════════════════════════════════
+        # Save bucket policy (simple version focused on PEN-diff)
+        # ══════════════════════════════════════════════════════════════
+        
+        bucket_policy_df = pd.DataFrame(bucket_summary)
+        bucket_policy_df.to_csv(cancer_dir / "bucket_policy.csv", index=False)
+        
+        # ══════════════════════════════════════════════════════════════
+        # Save metadata
+        # ══════════════════════════════════════════════════════════════
+        
         meta = {
-            "cancer": cancer,
-            "bucket_no": BUCKETS,
-            "top_fracs": TOP_FRACS,
-            "lambda": lam,
-            "weights": {"alpha_pen": ALPHA_PEN, "beta_dist": BETA_DIST, "gamma_ppr": GAMMA_PPR},
-            "edges": {"pen": pen_edges.tolist(), "dist": dist_edges.tolist(), "ppr": ppr_edges.tolist()},
+            "source": "PANACEA published histogram output",
+            "method": "Exact boundaries from PANACEA (NOT computed from data)",
+            "histogram_files": {
+                "pen": f"{cancer.capitalize()}_Cancer_oncogenes_PEN-diff_percentage_plot_des.png",
+                "dist": f"{cancer.capitalize()}_Cancer_oncogenes_Distance-diff_percentage_plot_des.png",
+                "ppr": f"{cancer.capitalize()}_Cancer_oncogenes_ppr-diff_percentage_plot_des.png"
+            },
+            "n_buckets": N_BUCKETS,
+            "edges": edges,
+            "explored_buckets": explored,
+            "unexplored_buckets": unexplored,
+            "bucket_summary": bucket_summary,
+            "note": "ALL bucket boundaries (PEN, Distance, PPR) come from PANACEA's analysis, not computed by us"
         }
-        (out_dir / "bucket_policy_meta.json").write_text(json.dumps(meta, indent=2))
+        
+        with open(cancer_dir / "bucket_policy_meta.json", "w") as f:
+            json.dump(meta, f, indent=2)
+        
+        print(f"\n  ✅ Saved:")
+        print(f"     • pairs_with_buckets.csv       ({len(df):,} pairs)")
+        print(f"     • bucket_policy.csv")
+        print(f"     • bucket_table_pen.csv")
+        print(f"     • bucket_table_dist.csv")
+        print(f"     • bucket_table_ppr.csv")
+        print(f"     • bucket_policy_meta.json")
+        print(f"\n{'='*70}\n")
 
-        print(f"[OK] {cancer}: wrote bucket tables + policy to {out_dir}")
 
 if __name__ == "__main__":
     main()
-

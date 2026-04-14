@@ -132,7 +132,7 @@ def main():
     meta = json.loads(meta_path.read_text())
     
     print(f"\n{'='*70}")
-    print(f"  🔬 UNEXPLORED BUCKET CANDIDATE RANKER — {args.cancer.upper()} CANCER")
+    print(f" UNEXPLORED BUCKET CANDIDATE RANKER — {args.cancer.upper()} CANCER")
     print(f"{'='*70}\n")
     
     # ── Load data ──────────────────────────────────────────────
