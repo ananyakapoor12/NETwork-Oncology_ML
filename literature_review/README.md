@@ -1,7 +1,6 @@
 # Literature Review — Referenced Papers
 
 All references cited in the Final Year Project thesis, numbered as they appear in the final bibliography.  
-PDFs to be added to this folder, named by reference number (e.g. `[01]_Hanahan_2011.pdf`).
 
 ---
 
