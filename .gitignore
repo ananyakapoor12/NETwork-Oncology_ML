@@ -30,12 +30,6 @@ build/
 # macOS
 .DS_Store
 
-# Models (if you have any)
-*.h5
-*.pkl
-*.joblib
-*.pth
-
 # Large output files
 *.zip
 *.tar.gz
@@ -45,7 +39,8 @@ build/
 venv/
 env/
 
-# Model files
+# Misc model formats (kept gitignored; canonical models/ is tracked)
+*.h5
+*.pkl
 *.cbm
 *.ubj
-models/
