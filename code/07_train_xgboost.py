@@ -1,7 +1,4 @@
-"""
-Train an XGBoost learning-to-rank model (rank:ndcg objective) on the same
-bucket-guided training data used for the LightGBM ranker.
-"""
+"""Train an XGBoost pairwise ranker (rank:ndcg) on bucket-guided training pairs."""
 
 from pathlib import Path
 import argparse

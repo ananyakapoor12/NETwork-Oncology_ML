@@ -1,9 +1,4 @@
-"""
-Script 09: Enhanced Visualizations
-
-Comprehensive visualization suite for FYP presentation.
-Generates 10+ publication-quality figures.
-"""
+"""Generate primary publication figures (figs 1–7)."""
 from pathlib import Path
 import warnings
 import numpy as np 

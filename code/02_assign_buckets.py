@@ -1,21 +1,4 @@
-"""
-Script 02: PANACEA Bucket Policy (COMPLETE EXACT ALIGNMENT)
-
-CRITICAL: Uses EXACT bucket boundaries from ALL PANACEA histogram outputs.
-These edges are extracted from the published PANACEA histogram images.
-We do NOT compute our own buckets - we use PANACEA's exact boundaries.
-
-Source: PANACEA histogram output files:
-  Breast Cancer:
-    - Breast_Cancer_oncogenes_PEN-diff_percentage_plot_des.png
-    - Breast_Cancer_oncogenes_Distance-diff_percentage_plot_des.png
-    - Breast_Cancer_oncogenes_ppr-diff_percentage_plot_des.png
-  
-  Prostate Cancer:
-    - Prostate_Cancer_oncogenes_PEN-diff_percentage_plot_des.png
-    - Prostate_Cancer_oncogenes_Distance-diff_percentage_plot_des.png
-    - Prostate_Cancer_oncogenes_ppr-diff_percentage_plot_des.png
-"""
+"""Assign PANACEA's published PEN/PPR/dist histogram bucket boundaries to all gene pairs."""
 from pathlib import Path
 import json
 import numpy as np # type: ignore
@@ -127,7 +110,7 @@ def main():
         # Load standardized pairs
         pairs_path = cancer_dir / "pairs_k2_standardized.csv"
         if not pairs_path.exists():
-            raise FileNotFoundError(f"Run Script 01 first. Missing: {pairs_path}")
+            raise FileNotFoundError(f"Missing: {pairs_path}")
         
         df = pd.read_csv(pairs_path)
         print(f"  Loaded {len(df):,} gene pairs")

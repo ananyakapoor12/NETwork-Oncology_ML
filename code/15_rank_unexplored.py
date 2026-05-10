@@ -1,3 +1,4 @@
+"""Score gene pairs in unexplored buckets using composite model + novelty weighting."""
 from __future__ import annotations
 import argparse
 import json

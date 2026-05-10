@@ -1,3 +1,4 @@
+"""Generate K=3 gene triplets from pairwise ranked candidates."""
 from pathlib import Path
 import json
 import numpy as np

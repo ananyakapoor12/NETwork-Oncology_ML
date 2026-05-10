@@ -11,8 +11,8 @@
 
 ## Table of Contents
 
+- [Relationship to PANACEA](#relationship-to-panacea)
 - [Overview](#overview)
-- [Key Features](#key-features)
 - [Results Summary](#results-summary)
 - [Installation](#installation)
 - [Usage](#usage)
@@ -23,44 +23,41 @@
 
 ---
 
-## Overview
+## Relationship to PANACEA
 
-This project extends the **PANACEA** framework by implementing machine learning-based ranking models to:
+This project is a **direct extension layer** built on top of the [PANACEA framework](https://github.com/NerissaX/PANACEA).
 
-1. **Rank therapeutic targets within explored histogram buckets** using five ML models (LightGBM, XGBoost, CatBoost, Random Forest, Neural MLP)
-2. **Discover novel therapeutic targets in unexplored buckets** with zero known drug combinations
-3. **Provide bucket-aware model evaluation** showing which models perform best in different PEN-diff regions
-4. **Validate the PEN-diff bucketing design** empirically against alternative schemes (PPR-diff, dist-diff)
+```
+PANACEA (upstream)                   This project (ML layer)
+─────────────────────────────────    ──────────────────────────────────────
+panacea.py + modules                 code/01_ingest.py  →  ...  →  22
+       │                                         ▲
+       │  produces                               │  consumes
+       ▼                                         │
+outputs/<cancer>/
+  ranked_pen.tsv   ──────────────▶  input/<cancer>/ranked_pen.tsv
+  ranked_dist.tsv  ──────────────▶  input/<cancer>/ranked_dist.tsv
+  ranked_ppr.tsv   ──────────────▶  input/<cancer>/ranked_ppr.tsv
+  known_targets.txt ─────────────▶  input/<cancer>/known_targets.txt
+```
 
-### Novel Contributions
-
-- **Five-model comparison** — LightGBM, XGBoost, CatBoost, Random Forest, Neural MLP evaluated under identical conditions
-- **Per-bucket multi-model comparison** (Script 07b) — first implementation showing bucket-specific model performance
-- **Composite scoring for unexplored regions** (Script 08) — 70% model score + 30% novelty weight
-- **Confidence tier assignment** (High/Medium/Low) for experimental validation prioritisation
-- **Bucket scheme validation** (Script 13) — empirical comparison of PEN-diff vs PPR-diff vs dist-diff bucketing
-- **Systematic ablation studies** (Script 11) — feature and group ablation quantifying each component's contribution
+Copy PANACEA's `outputs/<cancer>/` TSV files into `input/<cancer>/` before running Script 01.
 
 ---
 
-## Key Features
+## Overview
 
-### Multi-Model Ranking
-- **LightGBM LambdaMART** — primary ranking model (best overall performance)
-- **XGBoost Pairwise** — difference-vector pairwise ranker
-- **CatBoost YetiRank** — gradient boosted ranker
-- **Random Forest** — classification-based ranking baseline
-- **Neural MLP** — 3-layer deep learning ranker with StandardScaler normalisation
+This project extends PANACEA by training ML ranking models to prioritise therapeutic targets and discover novel candidates in unexplored network regions.
 
-### Bucket-Aware Analysis
-- Histogram buckets based on PEN-diff (network penetration difference) using PANACEA's published boundaries
-- Per-bucket model evaluation revealing heterogeneous difficulty across the search space
-- Bucket features contribute 12–13% to model importance (validated by ablation)
-
-### Unexplored Discovery
-- Identifies candidates in zero-coverage PEN-diff buckets
-- Composite scoring combines model prediction + structural novelty
-- Confidence tiers enable prioritisation for wet-lab validation
+**Contributions:**
+- Five-model comparison (LightGBM, XGBoost, CatBoost, Random Forest, Neural MLP) under identical conditions
+- Per-bucket model evaluation revealing heterogeneous difficulty across PEN-diff regions (Script 14)
+- Composite scoring for unexplored buckets: 70% model + 30% novelty weight (Script 15)
+- Confidence tier assignment (High/Medium/Low) for wet-lab prioritisation
+- Bucket scheme validation — PEN-diff vs PPR-diff vs dist-diff (Script 20)
+- Systematic ablation studies quantifying each feature group's contribution (Script 18)
+- Heuristic and single-score baseline comparisons (Script 21)
+- Full evaluation against PANACEA's native coverage@m% protocol (Script 22)
 
 ---
 
@@ -88,37 +85,27 @@ This project extends the **PANACEA** framework by implementing machine learning-
 | **Breast** | 59 | 0 (0%) | SALL4 combinations |
 | **Prostate** | 602 | **567 (94.2%)** | RAP1GAP–PHB2 (score=1.0) |
 
-### Key Findings
-
-1. **LightGBM dominates** across all explored buckets in both cancers
-2. **Prostate >> Breast** in ranking performance (73.8% vs 45.8% Recall@1)
-3. **Bucket features are used** (12–13% importance, validates bucket-aware approach)
-4. **602 high-confidence novel prostate targets** in unexplored bucket (PEN-diff 0.80–1.13)
-5. **PEN-diff bucketing validated** — PPR-diff bucketing produces 39.8% larger worst-case buckets and collapses 93.1% of prostate known targets into a single bucket, eliminating the novel discovery space
-
 ---
 
 ## Installation
 
 ### Prerequisites
-- Python 3.10
-- pip package manager
-- 8GB+ RAM (for training)
-- ~500MB disk space (excluding raw data)
+- Python 3.10, pip, 8GB+ RAM
 
 ### Setup
 
 ```bash
-# Clone repository
 git clone https://github.com/ananyakapoor12/NETwork-Oncology_ML.git
 cd NETwork-Oncology_ML
-
-# Create virtual environment (use Python 3.10 explicitly)
-python3.10 -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-
-# Install dependencies
+python3.10 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
+
+# Copy PANACEA outputs before running the pipeline
+mkdir -p input/breast input/prostate
+cp <panacea_repo>/outputs/breast/ranked_*.tsv  input/breast/
+cp <panacea_repo>/outputs/breast/known_targets.txt input/breast/
+cp <panacea_repo>/outputs/prostate/ranked_*.tsv input/prostate/
+cp <panacea_repo>/outputs/prostate/known_targets.txt input/prostate/
 ```
 
 ### Core Dependencies
@@ -133,364 +120,197 @@ pip install -r requirements.txt
 | `numpy` | 2.2.6 | Numerical operations |
 | `matplotlib` | 3.10.8 | Visualisations |
 | `seaborn` | 0.13.2 | Statistical plots |
-| `joblib` | — | Model persistence |
-
-See `requirements.txt` for the complete list.
 
 ---
 
 ## Usage
 
-### Step-by-Step Execution
+Replace `breast` with `prostate` to run for the other cancer type.
 
-Replace `breast` with `prostate` to run for the other cancer type. Run both cancers for all phases.
-
-#### Phase 1: Data Preparation
+### Phase 1 — Data Preparation
 
 ```bash
-# Merge PANACEA outputs and annotate known targets
-python scripts/01_prepare_data.py
-
-# Assign PANACEA histogram bucket boundaries
-python scripts/02_bucket_policy.py
-
-# Build ranking training groups (1 positive : 8 negatives, bucket-aware sampling)
-python scripts/03_prepare_training_data.py --cancer breast
-
-# Generate hard-negative training pairs
-python scripts/03b_prepare_training_data_hardneg.py --cancer breast
-
-# Merge standard and hard-negative sets
-python scripts/03c_merge_training_data.py --cancer breast
+python code/01_ingest.py                          # merge PANACEA TSVs
+python code/02_assign_buckets.py                  # assign histogram buckets
+python code/03_build_train_pairs.py --cancer breast
+python code/04_add_hard_negatives.py --cancer breast
+python code/05_merge_train_data.py  --cancer breast
 ```
 
-**Outputs:**
-- `outputs/breast/pairs_k2_standardized.csv` — standardised gene pairs
-- `outputs/breast/pairs_with_buckets.csv` — with bucket assignments
-- `outputs/breast/bucket_policy.csv` — explored/unexplored classification
-- `outputs/breast/train_rank_final.csv` — training data with hard negatives
+**Key outputs:** `outputs/breast/pairs_with_buckets.csv`, `train_rank_final.csv`
 
 ---
 
-#### Phase 2: Model Training
+### Phase 2 — Model Training
 
 ```bash
-python scripts/04_train_ranker.py               --cancer breast   # LightGBM LambdaMART
-python scripts/04b_train_xgboost_ranker.py      --cancer breast   # XGBoost pairwise
-python scripts/04c_train_catboost_ranker.py     --cancer breast   # CatBoost YetiRank
-python scripts/04d_train_RandomForest_ranker.py --cancer breast   # Random Forest
-python scripts/04e_train_NeuralNetwork_ranker.py --cancer breast  # Neural MLP
+python code/06_train_lgbm.py   --cancer breast
+python code/07_train_xgboost.py --cancer breast
+python code/08_train_catboost.py --cancer breast
+python code/09_train_rf.py      --cancer breast
+python code/10_train_nn.py      --cancer breast
 ```
 
-**Outputs (per cancer, in `models/breast/`):**
-- `lgbm_ranker.joblib` / `lgbm_ranker.txt`
-- `xgb_ranker.joblib` / `xgb_ranker.ubj`
-- `catboost_ranker.cbm` / `catboost_ranker.joblib`
-- `rf_ranker.joblib`
-- `nn_ranker.pth` / `nn_scaler.joblib`
-- `feature_importance.csv`
+**Key outputs:** `models/breast/` — one saved model per ranker
 
 ---
 
-#### Phase 3: K=3 Triplet Generation
+### Phase 3 — K=3 Triplet Generation
 
 ```bash
-python scripts/05_generate_k3.py  --cancer breast   # generate triplet combinations
-python scripts/06_finalize_k3.py  --cancer breast   # deduplicate and rank
+python code/11_generate_triplets.py --cancer breast
+python code/12_finalize_triplets.py --cancer breast
 ```
 
-**Outputs:**
-- `outputs/breast/k3_ranked_final.csv`
+**Key output:** `outputs/breast/k3_ranked_final.csv`
 
 ---
 
-#### Phase 4: Model Comparison & Per-Bucket Analysis
+### Phase 4 — Model Evaluation
 
 ```bash
-python scripts/07a_compare_models.py              --cancer breast   # overall metrics
-python scripts/07b_multi_model_bucket_ranker.py   --cancer breast   # per-bucket breakdown
-python scripts/07b_multi_model_bucket_ranker.py   --cancer prostate
+python code/13_compare_models.py          --cancer breast
+python code/14_compare_models_by_bucket.py --cancer breast
+python code/14_compare_models_by_bucket.py --cancer prostate
 ```
 
-**Outputs:**
-- `outputs/breast/model_comparison.csv`
-- `outputs/breast/explored_model_comparison.csv`
-- `outputs/breast/explored_bucket_summary.csv`
+**Key outputs:** `model_comparison.csv`, `explored_model_comparison.csv`, `explored_bucket_summary.csv`
 
 ---
 
-#### Phase 5: Unexplored Bucket Discovery
+### Phase 5 — Novel Candidate Discovery
 
 ```bash
-python scripts/08_rank_unexplored_candidates.py --cancer breast
-python scripts/08_rank_unexplored_candidates.py --cancer prostate
+python code/15_rank_unexplored.py --cancer breast
+python code/15_rank_unexplored.py --cancer prostate
 ```
 
-**Outputs:**
-- `outputs/breast/unexplored_ranked_all.csv` — all candidates with composite score
-- `outputs/breast/unexplored_top_candidates.csv` — top 100 high-confidence
-- `outputs/breast/unexplored_by_bucket.csv` — per-bucket summary
-
-**Key result:** 602 high-confidence prostate candidates (e.g., RAP1GAP–PHB2, score=1.0)
+**Key outputs:** `unexplored_ranked_all.csv`, `unexplored_top_candidates.csv`
 
 ---
 
-#### Phase 6: Novelty Verification & Ablation
+### Phase 6 — Analysis
 
 ```bash
-python scripts/10_verify_novelty.py   --cancer breast    # confirm candidates are truly novel
-python scripts/11_ablation_studies.py --cancer breast    # feature ablation experiments
-python scripts/11_ablation_studies.py --cancer prostate
+python code/17_verify_novelty.py --cancer breast
+python code/18_ablation.py       --cancer breast
+python code/18_ablation.py       --cancer prostate
+python code/20_compare_bucket_schemes.py --cancer breast
+python code/20_compare_bucket_schemes.py --cancer prostate
+python code/21_compare_baselines.py      --cancer breast
+python code/21_compare_baselines.py      --cancer prostate
+python code/22_compare_panacea_coverage.py --cancer breast
+python code/22_compare_panacea_coverage.py --cancer prostate
 ```
-
-**Outputs:**
-- `outputs/breast/novelty_verification.csv`
-- `outputs/breast/ablation_study.csv`
 
 ---
 
-#### Phase 7: Bucket Scheme Validation (addresses PEN vs PPR bucketing question)
+### Phase 7 — Visualisation
 
 ```bash
-python scripts/13_bucket_scheme_comparison.py --cancer breast
-python scripts/13_bucket_scheme_comparison.py --cancer prostate
+python code/16_visualize.py               # figs 1–7
+python code/19_visualize_supplementary.py # figs 8–15
 ```
 
-**Outputs:**
-- `outputs/breast/bucket_scheme_quality.csv` — worst-case size, known-target spread
-- `outputs/breast/bucket_scheme_ranker.csv` — Recall@1 under each scheme
-- `outputs/breast/bucket_scheme_discovery.csv` — novel candidate space per scheme
-
----
-
-#### Phase 8: Visualisation
-
-```bash
-# Primary figures (figs 1–7): publication-quality, colour-corrected
-python scripts/09b_visualize_results_enhanced.py
-
-# Supplementary figures (figs 8–15): performance matrices, curves, radar charts
-python scripts/12_generate_final_visualizations.py
-```
-
-**Outputs (`figures/`):**
-
-| Figure | Description |
-|--------|-------------|
-| `fig1_panacea_bucket_distribution.png` | Explored vs unexplored bucket regions |
-| `fig2_model_comparison_across_cancers.png` | Cross-cancer model performance |
-| `fig3_bucket_specific_performance.png` | Per-bucket heatmap |
-| `fig4_feature_importance_comparison.png` | Feature importance by cancer |
-| `fig5_novel_candidate_scores.png` | Novel candidate score distributions |
-| `fig6_top_discoveries_heatmap.png` | Top 20 high-confidence candidates |
-| `fig7_ablation_study.png` | Feature ablation results |
-| `fig8–fig15` | Supplementary performance figures |
+**All figures saved to `figures/`.**
 
 ---
 
 ## Project Structure
 
 ```
-NETwork-Oncology_ML/
+FYP_PANACEA/
 │
-├── README.md                                    ← This file
-├── RESULTS_SUMMARY.md                           ← Quick results reference
-├── EXECUTIVE_SUMMARY.md                         ← High-level summary
-├── requirements.txt                             ← Python dependencies
+├── README.md
+├── requirements.txt
 ├── .gitignore
 │
-├── scripts/
-│   ├── 01_prepare_data.py                       ← Merge PANACEA TSVs, annotate known targets
-│   ├── 02_bucket_policy.py                      ← Assign PANACEA histogram buckets
-│   ├── 03_prepare_training_data.py              ← Build ranking groups (bucket-aware sampling)
-│   ├── 03b_prepare_training_data_hardneg.py     ← Hard negative mining
-│   ├── 03c_merge_training_data.py               ← Merge standard + hard negative sets
-│   ├── 04_train_ranker.py                       ← LightGBM LambdaMART
-│   ├── 04b_train_xgboost_ranker.py              ← XGBoost pairwise ranker
-│   ├── 04c_train_catboost_ranker.py             ← CatBoost YetiRank
-│   ├── 04d_train_RandomForest_ranker.py         ← Random Forest baseline
-│   ├── 04e_train_NeuralNetwork_ranker.py        ← Neural MLP ranker
-│   ├── 05_generate_k3.py                        ← K=3 triplet generation
-│   ├── 05_analysis_plots.py                     ← Training diagnostics
-│   ├── 06_finalize_k3.py                        ← Deduplicate and rank K=3 triplets
-│   ├── 07a_compare_models.py                    ← Overall model comparison
-│   ├── 07b_multi_model_bucket_ranker.py         ← Per-bucket model comparison
-│   ├── 08_rank_unexplored_candidates.py         ← Novel candidate discovery
-│   ├── 09_visualize_results.py                  ← Legacy visualisation script
-│   ├── 09b_visualize_results_enhanced.py        ← Primary visualisation (figs 1–7)
-│   ├── 10_verify_novelty.py                     ← Novelty verification
-│   ├── 11_ablation_studies.py                   ← Feature and group ablation
-│   ├── 12_generate_final_visualizations.py      ← Supplementary figures (figs 8–15)
-│   └── 13_bucket_scheme_comparison.py           ← PEN vs PPR vs dist bucketing validation
-│
-├── data_raw/                                    ← Raw PANACEA outputs (not in git)
+├── input/                  ← PANACEA framework outputs (not in git)
 │   ├── breast/
 │   │   ├── ranked_pen.tsv
 │   │   ├── ranked_dist.tsv
-│   │   └── ranked_ppr.tsv
+│   │   ├── ranked_ppr.tsv
+│   │   └── known_targets.txt
 │   └── prostate/
 │       └── (same structure)
 │
-├── outputs/                                     ← Processed data & results (not in git)
+├── code/
+│   │   — Data preparation —
+│   ├── 01_ingest.py
+│   ├── 02_assign_buckets.py
+│   ├── 03_build_train_pairs.py
+│   ├── 04_add_hard_negatives.py
+│   ├── 05_merge_train_data.py
+│   │   — Model training —
+│   ├── 06_train_lgbm.py
+│   ├── 07_train_xgboost.py
+│   ├── 08_train_catboost.py
+│   ├── 09_train_rf.py
+│   ├── 10_train_nn.py
+│   │   — K=3 triplets —
+│   ├── 11_generate_triplets.py
+│   ├── 12_finalize_triplets.py
+│   │   — Evaluation —
+│   ├── 13_compare_models.py
+│   ├── 14_compare_models_by_bucket.py
+│   ├── 15_rank_unexplored.py
+│   │   — Analysis & visualisation —
+│   ├── 16_visualize.py
+│   ├── 17_verify_novelty.py
+│   ├── 18_ablation.py
+│   ├── 19_visualize_supplementary.py
+│   ├── 20_compare_bucket_schemes.py
+│   ├── 21_compare_baselines.py
+│   └── 22_compare_panacea_coverage.py
+│
+├── outputs/                         ← Generated CSVs (not in git)
 │   ├── breast/
-│   │   ├── pairs_k2_standardized.csv
-│   │   ├── pairs_with_buckets.csv
-│   │   ├── bucket_policy.csv
-│   │   ├── train_rank_final.csv
-│   │   ├── model_comparison.csv
-│   │   ├── explored_model_comparison.csv
-│   │   ├── ablation_study.csv
-│   │   ├── bucket_scheme_*.csv
-│   │   ├── unexplored_ranked_all.csv
-│   │   ├── unexplored_top_candidates.csv
-│   │   └── novelty_verification.csv
 │   └── prostate/
-│       └── (same structure)
 │
-├── models/                                      ← Trained models (not in git)
+├── models/                          ← Trained model files (not in git)
 │   ├── breast/
-│   │   ├── lgbm_ranker.joblib / lgbm_ranker.txt
-│   │   ├── xgb_ranker.joblib / xgb_ranker.ubj
-│   │   ├── catboost_ranker.cbm
-│   │   ├── rf_ranker.joblib
-│   │   ├── nn_ranker.pth / nn_scaler.joblib
-│   │   └── feature_importance.csv
 │   └── prostate/
-│       └── (same structure)
 │
-└── figures/                                     ← Publication-quality plots (in git)
-    ├── fig1_panacea_bucket_distribution.png
-    ├── fig2_model_comparison_across_cancers.png
-    ├── fig3_bucket_specific_performance.png
-    ├── fig4_feature_importance_comparison.png
-    ├── fig5_novel_candidate_scores.png
-    ├── fig6_top_discoveries_heatmap.png
-    ├── fig7_ablation_study.png
-    └── fig8–fig15 (supplementary figures)
+└── figures/                         ← All publication figures (in git)
 ```
 
 ---
 
 ## Methodology
 
-### 1. Bucket-Based Ranking Framework
-
-**Histogram Buckets:**
-- Gene pairs binned using PANACEA's published PEN-diff boundaries (5 buckets per cancer)
-- Explored buckets: contain ≥1 known drug combination
-- Unexplored buckets: zero known combinations (novel search space)
-- PEN-diff chosen over PPR-diff/dist-diff — empirically validated in Script 13
-
-**Features (7 total):**
+### Features (7 total)
 - `pen_diff`, `dist_diff`, `ppr_diff` — core PANACEA network scores
-- `bucket_pen`, `bucket_dist`, `bucket_ppr` — bucket assignments (categorical)
-- `pos_in_bucket_pen` — position within PEN bucket (continuous)
+- `bucket_pen`, `bucket_dist`, `bucket_ppr` — PANACEA bucket assignments
+- `pos_in_bucket_pen` — position within PEN-diff bucket
 
-### 2. Multi-Model Ranking
-
-**LightGBM LambdaMART:**
-```python
-objective="lambdarank", num_leaves=63, learning_rate=0.05, n_estimators=500
-```
-
-**XGBoost Pairwise:**
-```python
-X_train = X_pos - X_neg   # difference vectors
-y_train = [1] * n_pairs   # positive always ranked higher
-```
-
-**Neural MLP:**
-```python
-hidden_layers=(128, 64, 32), activation="relu", StandardScaler normalisation
-```
-
-### 3. Unexplored Bucket Discovery
-
-**Composite Scoring:**
+### Unexplored Bucket Scoring
 ```
 composite_score = 0.7 × model_score + 0.3 × novelty_weight
 ```
-
-**Confidence Tiers:**
-- **High**: composite_score ≥ 67th percentile AND pen_diff > 0.15
-- **Medium**: composite_score ≥ 33rd percentile
-- **Low**: composite_score < 33rd percentile
+- **High confidence**: score ≥ 67th percentile AND pen_diff > 0.15
+- **Medium**: score ≥ 33rd percentile
+- **Low**: score < 33rd percentile
 
 ---
 
 ## Reproducing Results
 
-### Expected Runtime
-
-| Phase | Scripts | Cancer | Approx. Time |
-|-------|---------|--------|-------------|
-| Data prep | 01–03c | Both | ~5 min |
-| Model training | 04–04e | Both | ~15 min |
-| K=3 generation | 05–06 | Both | ~5 min |
-| Comparison | 07a–07b | Both | ~15 min |
-| Discovery | 08 | Both | ~2 min |
-| Ablation | 11 | Both | ~10 min |
-| Bucket validation | 13 | Both | ~10 min |
-| Visualisation | 09b, 12 | — | ~2 min |
-
-**Total: ~65 minutes for complete pipeline (both cancers)**
-
-### Hardware Requirements
-
-- **Minimum**: 8GB RAM, 4 cores
-- **Recommended**: 16GB RAM, 8 cores
-- **Disk**: ~500MB (excluding raw data)
+| Phase | Scripts | Runtime (both cancers) |
+|-------|---------|------------------------|
+| Data prep | 01–05 | ~5 min |
+| Training | 06–10 | ~15 min |
+| Triplets | 11–12 | ~5 min |
+| Evaluation | 13–15 | ~15 min |
+| Analysis | 17–22 | ~30 min |
+| Visualisation | 16, 19 | ~2 min |
+| **Total** | | **~72 min** |
 
 ---
 
 ## Citation
 
-```bibtex
-@mastersthesis{kapoor2026network,
-  title={Network Embedding for Drug Target Discovery in Cancer Signalling Networks:
-         A Machine Learning Based Approach},
-  author={Kapoor, Ananya},
-  year={2026},
-  school={Nanyang Technological University},
-  type={Final Year Project}
-}
-```
-
-**PANACEA Framework:**
-```bibtex
-@article{panacea2024,
-  title={PANACEA: Pan-cancer Analysis of Cancer Drug Target Combinations},
-  author={[Bhowmick et al.]},
-  journal={[Journal]},
-  year={2024}
-}
-```
+**PANACEA Framework:** https://github.com/NerissaX/PANACEA
 
 ---
 
-## Contact
-
-**Author:** Ananya Kapoor  
-**GitHub:** https://github.com/ananyakapoor12  
-**Email:** ananya.kapoor.1103@gmail.com
-
-**Supervisor:** Assoc Prof. Sourav S. Bhowmick  
-**Institution:** Nanyang Technological University, Singapore
-
----
-
-## License
-
-MIT License
-
----
-
-## Acknowledgments
-
-- Assoc Prof. Sourav S. Bhowmick for supervision and guidance
-- PANACEA framework developers
-- College of Computing and Data Science, Nanyang Technological University, Singapore
-
----
-
-**Last Updated:** April 2026
+MIT License | Last Updated: May 2026

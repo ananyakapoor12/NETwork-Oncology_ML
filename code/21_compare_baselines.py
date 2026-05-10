@@ -1,23 +1,4 @@
-"""
-Script 14: SOTA Baseline Comparison
-
-Implements four baselines against which the LightGBM LambdaMART ranker is compared:
-
-  1. Random Ranking       — uniformly shuffle candidates within each test group
-  2. Degree Centrality    — rank pairs by sum of node degrees in the PPI network
-  3. Single-Score (PEN)   — rank by pen_diff alone (no model, no bucket features)
-  4. Single-Score (dist)  — rank by dist_diff alone
-  5. Single-Score (PPR)   — rank by ppr_diff alone
-
-All baselines are evaluated on the SAME held-out test set as the main model
-(same SEED / TEST_FRAC split).  Results are written to:
-
-    outputs/{cancer}/baseline_comparison.csv
-
-Usage:
-    python scripts/14_baseline_comparison.py --cancer breast
-    python scripts/14_baseline_comparison.py --cancer prostate
-"""
+"""Compare LightGBM against heuristic baselines: random, degree centrality, and single-score rankings."""
 from pathlib import Path
 import argparse
 import json
@@ -28,7 +9,6 @@ import lightgbm as lgb
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 OUTPUTS = PROJECT_ROOT / "outputs"
 
-# ── Must match Script 03 / Script 06 settings exactly ──
 N_BUCKETS   = 5
 NEG_PER_POS = 8
 TEST_FRAC   = 0.2
@@ -79,13 +59,13 @@ def evaluate(df_scored: pd.DataFrame, name: str) -> dict:
 
 
 # ════════════════════════════════════════════════════════════════════════════
-# REBUILD TEST SET  (replicates Script 03 split using same SEED)
+# REBUILD TEST SET
 # ════════════════════════════════════════════════════════════════════════════
 
 def build_test_set(cancer_dir: Path) -> pd.DataFrame:
     """
     Rebuild the held-out test ranking groups from pairs_with_buckets.csv,
-    replicating Script 03's exact train/test split so baselines are comparable.
+    using the same SEED and split fraction as the training pipeline.
 
     Returns a DataFrame with columns:
         group_id, label, gene_u, gene_v,
@@ -95,7 +75,7 @@ def build_test_set(cancer_dir: Path) -> pd.DataFrame:
     """
     pairs_path = cancer_dir / "pairs_with_buckets.csv"
     if not pairs_path.exists():
-        raise FileNotFoundError(f"Run Script 02 first.  Missing: {pairs_path}")
+        raise FileNotFoundError(f"Missing: {pairs_path}")
 
     df = pd.read_csv(pairs_path)
 
@@ -105,7 +85,7 @@ def build_test_set(cancer_dir: Path) -> pd.DataFrame:
     n_test   = int(len(pos_idx) * TEST_FRAC)
     test_pos = pos_idx[:n_test]
 
-    # Negatives per bucket (same as Script 03)
+    # Negatives per bucket (same ratio as training split)
     neg_by_bucket = {
         b: df.index[(df["is_known"] == 0) & (df["bucket_pen"] == b)].to_numpy().copy()
         for b in range(N_BUCKETS)
@@ -238,7 +218,7 @@ def main():
 
     cancer_dir = OUTPUTS / cancer
 
-    print("  Building test set (replicating Script 03 split)...")
+    print("  Building test set...")
     test_df = build_test_set(cancer_dir)
     n_groups = test_df["group_id"].nunique()
     print(f"  Test groups: {n_groups:,}  |  Test rows: {len(test_df):,}\n")
@@ -248,7 +228,6 @@ def main():
 
     results = []
 
-    # ── Reference: full LightGBM model ──
     print("\n  [0] LightGBM reference model")
     results.append(baseline_lgbm(cancer_dir, test_df))
 

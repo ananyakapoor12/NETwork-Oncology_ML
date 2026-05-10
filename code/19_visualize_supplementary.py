@@ -1,19 +1,11 @@
-"""
-Generates figures 8-15 using actual results from Tables 4.9, 4.10, 4.11, 4.12, C.1, C.2
-Output: figures/ directory (starting from fig8)
-"""
+"""Generate supplementary publication figures (figs 8–15)."""
 
 import sys
 import os
 from pathlib import Path
 
-print("=" * 80)
-print("Starting visualization generation...")
-print("=" * 80)
-
 import matplotlib
 matplotlib.use('Agg')
-print("Matplotlib backend configured")
 
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -23,8 +15,6 @@ import networkx as nx
 from scipy import integrate
 import warnings
 warnings.filterwarnings('ignore')
-
-print("All packages imported successfully")
 
 """# Create output directory
 OUTPUT_DIR = Path("figures")
@@ -40,8 +30,6 @@ OUTPUT_DIR = PROJECT_ROOT / "figures"
 
 # Ensure it exists (won’t recreate if already there)
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-
-print(f"Output directory: {OUTPUT_DIR}")
 
 # Publication-quality styling
 plt.style.use('seaborn-v0_8-whitegrid')
@@ -76,10 +64,6 @@ COLORS_CANCER = {
     'Breast': '#E85D75',
     'Prostate': '#4A90D9'
 }
-
-print("\n" + "="*80)
-print("GENERATING VISUALIZATIONS FROM ACTUAL REPORT DATA")
-print("="*80 + "\n")
 
 # Data from Table 4.10: Breast Cancer Performance
 BREAST_METRICS = {
@@ -210,8 +194,6 @@ TOP_DISCOVERIES = {
         ('SALL4', 'FOXO1', 0.486)
     ]
 }
-
-print("All data loaded from report tables\n")
 
 # ============================================================================
 # FIGURE 8: Bucket Performance Heatmap

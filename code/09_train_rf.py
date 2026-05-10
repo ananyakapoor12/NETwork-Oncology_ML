@@ -1,9 +1,4 @@
-"""
-Script 04d: Train Random Forest Ranker
-
-Random Forest classifier used as a ranker by predicting probability scores.
-Serves as a baseline for comparison with gradient boosting methods.
-"""
+"""Train a Random Forest classifier used as a ranker via predict_proba scores."""
 from pathlib import Path
 import numpy as np
 import pandas as pd 

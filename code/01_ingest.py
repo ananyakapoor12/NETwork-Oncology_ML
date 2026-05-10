@@ -1,9 +1,10 @@
+"""Merge PANACEA ranked TSV outputs and label known drug-target pairs."""
 import re
 from pathlib import Path
 import pandas as pd
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-DATA_RAW = PROJECT_ROOT / "data_raw"
+DATA_RAW = PROJECT_ROOT / "input"
 OUTPUTS = PROJECT_ROOT / "outputs"
 
 CANCERS = ["breast", "prostate"]

@@ -1,6 +1,4 @@
-"""
-Script 04e: Train Neural Network Ranker
-"""
+"""Train a 3-layer MLP ranker (pairwise BCE loss) on bucket-guided training pairs."""
 from pathlib import Path
 import numpy as np
 import pandas as pd

@@ -1,3 +1,4 @@
+"""Deduplicate K=3 triplets (canonical ordering) and rank by aggregated pairwise score."""
 import pandas as pd # type: ignore
 from pathlib import Path
 

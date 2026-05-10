@@ -1,3 +1,4 @@
+"""Concatenate standard and hard-negative training sets into train_rank_final.csv."""
 from pathlib import Path
 import pandas as pd
 

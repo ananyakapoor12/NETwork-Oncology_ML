@@ -1,3 +1,4 @@
+"""Train a LightGBM LambdaMART ranker on bucket-guided training pairs."""
 from pathlib import Path
 import numpy as np
 import pandas as pd

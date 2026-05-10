@@ -1,10 +1,4 @@
-"""
-Train a CatBoost learning-to-rank model (YetiRank objective) on the same
-bucket-guided training data used for the LightGBM and XGBoost rankers.
-
-YetiRank directly optimises NDCG, making it well aligned with the therapeutic
-prioritisation objective.
-"""
+"""Train a CatBoost YetiRank ranker on bucket-guided training pairs."""
 
 from pathlib import Path
 import argparse

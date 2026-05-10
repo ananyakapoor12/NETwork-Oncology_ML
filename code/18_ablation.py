@@ -1,9 +1,4 @@
-"""
-Script 12: Ablation Studies
-
-Systematically removes components to measure their contribution to model performance.
-Tests: feature ablation, bucket ablation, hard negative ablation.
-"""
+"""Measure each feature group's contribution by systematically ablating inputs."""
 from pathlib import Path
 import pandas as pd 
 import numpy as np 

@@ -1,5 +1,13 @@
+# PANACEA upstream outputs used as input to this project
+input/
+
+# CatBoost training artefacts (auto-generated at project root)
+catboost_info/
+
+# Intermediate PNGs inside outputs/ (figures/ is the canonical location)
+outputs/**/*.png
+
 # Large data files
-data_raw/
 *.csv
 *.xlsx
 *.xls

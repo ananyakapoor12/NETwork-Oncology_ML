@@ -1,9 +1,4 @@
-"""
-Script 07a: Compare Models
-
-Compares different ML model architectures (LightGBM, XGBoost, CatBoost, RF, NN)
-on the same test set and generates a comparison report.
-"""
+"""Compare all five rankers (Recall@K, NDCG@K) on the held-out test set."""
 from pathlib import Path
 import pandas as pd
 import numpy as np 

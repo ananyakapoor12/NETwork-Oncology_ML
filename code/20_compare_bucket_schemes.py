@@ -1,10 +1,4 @@
-"""
-Three experiments:
-  1. Bucket Quality Metrics  — compare PEN / PPR / dist bucket distributions from existing data
-  2. Ranker Performance      — retrain LightGBM with PPR-based grouping vs PEN-based grouping
-  3. Novel Discovery Impact  — show how the unexplored region changes under each scheme
-
-"""
+"""Compare PEN-diff, PPR-diff, and dist-diff as bucket schemes across quality, ranker performance, and discovery space."""
 from pathlib import Path
 import argparse
 import json

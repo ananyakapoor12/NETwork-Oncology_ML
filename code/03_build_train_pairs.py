@@ -1,3 +1,4 @@
+"""Build bucket-aware ranking groups: 1 known target paired with 8 same-bucket negatives."""
 import json
 from pathlib import Path
 import numpy as np

@@ -1,3 +1,4 @@
+"""Generate hard-negative training pairs by scoring negatives with a pretrained LightGBM model."""
 import json
 from pathlib import Path
 import numpy as np # type: ignore
@@ -19,7 +20,6 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--cancer", required=True, choices=["breast","prostate"])
     ap.add_argument("--neg_per_pos", type=int, default=8)
-    #ap.add_argument("--hard_frac", type=float, default=0.5)
     ap.add_argument("--hard_frac", type=float, default=0.2)
     ap.add_argument("--seed", type=int, default=42)
     args = ap.parse_args()

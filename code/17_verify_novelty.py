@@ -1,9 +1,4 @@
-"""
-Verify Novelty of Top Candidates
-
-Ensures that discovered candidates are truly novel (not already in training data).
-Professor requirement: Top candidates must NOT be FDA-approved (is_known=1).
-"""
+"""Confirm top unexplored candidates are not already known drug-target pairs."""
 from pathlib import Path
 import json
 import pandas as pd

@@ -1,9 +1,4 @@
-"""
-Script 07b: Multi-Model Bucket Analysis
-
-Analyzes how different models perform within each PANACEA bucket.
-Shows which buckets are hardest to rank and which models excel where.
-"""
+"""Evaluate per-bucket model performance across all PANACEA PEN-diff regions."""
 from pathlib import Path
 import pandas as pd 
 import numpy as np 
